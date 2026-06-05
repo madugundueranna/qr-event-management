@@ -22,6 +22,11 @@
     "react-router-dom": "^7.15.1",
     "recharts": "^3.8.1"
   },
+  "optionalDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "1.0.1",
+    "@rolldown/binding-darwin-x64": "1.0.1",
+    "@rolldown/binding-darwin-arm64": "1.0.1"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.14",
