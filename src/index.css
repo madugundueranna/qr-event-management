@@ -1,0 +1,62 @@
+/* src/index.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  @apply bg-slate-50 text-ink-900 antialiased;
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .glass-card {
+    @apply rounded-2xl border border-white/40 bg-white/80 shadow-soft backdrop-blur-xl;
+  }
+
+  .form-label {
+    @apply mb-2 block text-sm font-semibold text-slate-700;
+  }
+
+  .form-input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition
+           focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100;
+  }
+
+  .form-select {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition
+           focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100;
+  }
+
+  /* Primary (indigo) */
+  .btn-primary {
+    @apply rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-500;
+  }
+
+  /* Alias – kept for any legacy usage */
+  .btn-indigo {
+    @apply rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-500;
+  }
+
+  .btn-gold {
+    @apply rounded-xl bg-yellow-500 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-yellow-400;
+  }
+
+  .btn-outline {
+    @apply rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700
+           transition hover:border-indigo-300 hover:text-indigo-600;
+  }
+}
+
+/* Keyframe for QR scanner laser */
+@keyframes scanLine {
+  0%   { top: 20%; }
+  100% { top: 80%; }
+}
