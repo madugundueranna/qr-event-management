@@ -106,7 +106,7 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:1998";
+    const backendUrl = (import.meta.env.VITE_API_URL || "http://localhost:1998").replace(/\/$/, "");
     window.location.href = `${backendUrl}/auth/google`;
   };
 
@@ -245,6 +245,21 @@ export default function Login() {
               {submitting ? "Logging in..." : "Login"}
             </Button>
           </form>
+
+          <div className="my-5 flex items-center gap-4 text-sm text-slate-500">
+            <div className="h-px flex-1 bg-slate-200" />
+            or continue with
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300"
+          >
+            <FaGoogle className="text-[#4285F4]" />
+            Continue with Google
+          </button>
 
           <p className="mt-5 text-center text-sm text-slate-600">
             Don't have an account?{" "}
