@@ -1,46 +1,31 @@
-// src/pages/public/Register.jsx  →  QREventix Register with email OTP verification
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  FiCheck, FiMail,
-  FiMapPin, FiPhone, FiShield, FiUser, FiBriefcase,
-  FiAlertCircle, FiRefreshCw,
+  FiMail, FiPhone, FiUser, FiLock, FiEye, FiEyeOff,
+  FiShield, FiBriefcase, FiMapPin, FiAlertCircle,
 } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa";
 import Button from "../../components/common/Button";
-import { sendOtp, verifyOtp } from "../../api/authApi";
 
 const INTERESTS = [
   "Music Festivals", "Tech Conferences", "Art Exhibitions",
   "Comedy Shows", "Sports Events", "Business Workshops",
 ];
 
-// ── Main Register component ───────────────────────────────────────────────────
 export default function Register() {
   const [role, setRole] = useState("attendee");
   const [selectedInterests, setSelectedInterests] = useState([]);
 
-  // Form fields
-  const [name, setName] = useState("");
+  const [name, setName]               = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail]             = useState("");
+  const [password, setPassword]       = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [companyName, setCompanyName] = useState("");
-  const [city, setCity] = useState("");
-  const [agreed, setAgreed] = useState(false);
+  const [city, setCity]               = useState("");
+  const [agreed, setAgreed]           = useState(false);
 
-  // Email OTP state
-  const [otpSent, setOtpSent]           = useState(false);
-  const [otpValue, setOtpValue]         = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [sendingOtp, setSendingOtp]     = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [otpError, setOtpError]         = useState("");
-  const [cooldown, setCooldown]         = useState(0);
-
-  // Form errors / submit
   const [errors, setErrors]       = useState({});
   const [error, setError]         = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -48,78 +33,6 @@ export default function Register() {
 
   const { registerUser } = useAuth();
   const navigate = useNavigate();
-
-  // Cooldown timer
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [cooldown]);
-
-  // Reset OTP state when email changes
-  const handleEmailChange = (val) => {
-    setEmail(val);
-    if (emailVerified || otpSent) {
-      setOtpSent(false);
-      setOtpValue("");
-      setEmailVerified(false);
-      setOtpError("");
-    }
-    if (errors.email) setErrors((p) => { const n = {...p}; delete n.email; return n; });
-  };
-
-  const handleGoogleLogin = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:1998";
-    window.location.href = `${backendUrl}/auth/google`;
-  };
-
-  // ── Send OTP ────────────────────────────────────────────────────────────────
-  const handleSendOtp = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      setErrors((p) => ({ ...p, email: "Email address is required." }));
-      return;
-    }
-    if (!emailRegex.test(email)) {
-      setErrors((p) => ({ ...p, email: "Enter a valid email address." }));
-      return;
-    }
-    setErrors((p) => { const n = {...p}; delete n.email; return n; });
-    setOtpError("");
-    setSendingOtp(true);
-    try {
-      await sendOtp(email.trim().toLowerCase(), "email-verify");
-      setOtpSent(true);
-      setOtpValue("");
-      setCooldown(60);
-    } catch (err) {
-      const msg = err.response?.data?.message || "Failed to send OTP. Please try again.";
-      setOtpError(msg);
-    } finally {
-      setSendingOtp(false);
-    }
-  };
-
-  // ── Verify OTP ──────────────────────────────────────────────────────────────
-  const handleVerifyOtp = async () => {
-    if (otpValue.length !== 6) {
-      setOtpError("Please enter the full 6-digit code.");
-      return;
-    }
-    setOtpError("");
-    setVerifyingOtp(true);
-    try {
-      await verifyOtp(email.trim().toLowerCase(), otpValue, "email-verify");
-      setPassword(otpValue);
-      setEmailVerified(true);
-      setOtpSent(false);
-    } catch (err) {
-      const msg = err.response?.data?.message || "Invalid OTP. Please try again.";
-      setOtpError(msg);
-    } finally {
-      setVerifyingOtp(false);
-    }
-  };
 
   const clearError = (field) =>
     setErrors((prev) => { const n = { ...prev }; delete n[field]; return n; });
@@ -129,18 +42,30 @@ export default function Register() {
       prev.includes(interest) ? prev.filter((x) => x !== interest) : [...prev, interest]
     );
 
-  // ── Validate form ───────────────────────────────────────────────────────────
+  const handleGoogleLogin = () => {
+    const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:1998";
+    window.location.href = `${backendUrl}/auth/google`;
+  };
+
   const validate = () => {
     const e = {};
     if (!name.trim()) e.name = "Full name is required.";
     else if (name.trim().length < 2) e.name = "Name must be at least 2 characters.";
+
     if (!mobileNumber.trim()) e.mobileNumber = "Mobile number is required.";
-    else if (!/^\+?[\d\s\-]{7,15}$/.test(mobileNumber.trim())) e.mobileNumber = "Enter a valid mobile number.";
+    else if (!/^\+?[\d\s\-]{7,15}$/.test(mobileNumber.trim()))
+      e.mobileNumber = "Enter a valid mobile number.";
+
     if (!email.trim()) e.email = "Email address is required.";
-    if (!emailVerified) e.email = "Please verify your email first.";
-    if (role === "organizer") {
-      if (!companyName.trim()) e.companyName = "Company / Organization name is required.";
-    }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      e.email = "Enter a valid email address.";
+
+    if (!password) e.password = "Password is required.";
+    else if (password.length < 8) e.password = "Password must be at least 8 characters.";
+
+    if (role === "organizer" && !companyName.trim())
+      e.companyName = "Company / Organization name is required.";
+
     if (!agreed) e.agreed = "You must agree to the Terms & Conditions.";
     return e;
   };
@@ -150,10 +75,7 @@ export default function Register() {
     setError("");
     setSuccessMsg("");
     const fieldErrors = validate();
-    if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors);
-      return;
-    }
+    if (Object.keys(fieldErrors).length > 0) { setErrors(fieldErrors); return; }
     setErrors({});
     setSubmitting(true);
     const isAgency = role === "organizer";
@@ -167,7 +89,7 @@ export default function Register() {
     };
     const res = await registerUser(payload);
     if (res.success) {
-      setSuccessMsg("Account registered successfully! Redirecting to login...");
+      setSuccessMsg("Account registered successfully! Redirecting to login…");
       setTimeout(() => navigate("/login", { replace: true }), 2000);
     } else {
       setError(res.message || "Registration failed. Please try again.");
@@ -175,7 +97,10 @@ export default function Register() {
     }
   };
 
-  const canSubmit = emailVerified && agreed && !submitting;
+  const canSubmit = agreed && !submitting
+    && name.trim() && mobileNumber.trim() && email.trim()
+    && password.length >= 8
+    && (role !== "organizer" || companyName.trim());
 
   return (
     <main className="min-h-screen bg-[linear-gradient(120deg,#07122d,#25345c)] text-white">
@@ -212,16 +137,16 @@ export default function Register() {
         </section>
 
         {/* ── Right Form Card ── */}
-        <section className="rounded-3xl border border-white/40 bg-white/70 p-5 text-ink-900 shadow-card backdrop-blur-2xl md:p-8">
+        <section className="rounded-3xl border border-white/40 bg-white/70 p-5 text-slate-900 shadow-card backdrop-blur-2xl md:p-8">
 
           {/* Role switcher */}
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-6 flex items-center justify-between">
             <div className="flex rounded-xl bg-slate-100 p-1">
               {["attendee", "organizer"].map((r) => (
                 <button
                   key={r}
                   type="button"
-                  onClick={() => { setRole(r); setError(""); }}
+                  onClick={() => { setRole(r); setError(""); setErrors({}); }}
                   className={`rounded-lg px-4 py-2 text-xs font-bold capitalize transition ${
                     role === r ? "bg-indigo-600 text-white" : "text-slate-600 hover:text-slate-900"
                   }`}
@@ -230,21 +155,23 @@ export default function Register() {
                 </button>
               ))}
             </div>
-            <div className="hidden rounded-xl border border-white/50 bg-white/40 px-4 py-2.5 text-xs font-semibold md:flex items-center gap-1.5">
+            <div className="hidden items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-4 py-2.5 text-xs font-semibold md:flex">
               <FiShield className="text-indigo-600" /> Secure Registration
             </div>
           </div>
 
           <div className="mb-5">
-            <h2 className="text-2xl font-black">Sign Up as {role === "attendee" ? "Attendee" : "Organizer"}</h2>
-            <p className="text-sm text-slate-500 mt-1">Enter your details to create a free account</p>
+            <h2 className="text-2xl font-black">
+              Sign Up as {role === "attendee" ? "Attendee" : "Organizer"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">Enter your details to create a free account</p>
           </div>
 
           {/* Google sign up */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="mb-5 w-full flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 transition"
+            className="mb-5 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50"
           >
             <FaGoogle className="text-red-500" />
             Sign up with Google
@@ -256,15 +183,15 @@ export default function Register() {
             <div className="h-px flex-1 bg-slate-200" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {error && (
-              <div className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+              <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
                 <FiAlertCircle className="mt-0.5 shrink-0" />
                 {error}
               </div>
             )}
             {successMsg && (
-              <div className="rounded-xl bg-green-50 p-3 text-sm text-green-700 border border-green-200 font-semibold">
+              <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm font-semibold text-green-700">
                 {successMsg}
               </div>
             )}
@@ -277,7 +204,7 @@ export default function Register() {
                   <FiUser size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${errors.name ? "text-red-400" : "text-slate-400"}`} />
                   <input
                     className={`form-input pl-9 text-sm ${errors.name ? "border-red-500 focus:ring-red-400" : ""}`}
-                    placeholder="Nandu"
+                    placeholder="Your full name"
                     value={name}
                     onChange={(e) => { setName(e.target.value); clearError("name"); }}
                   />
@@ -300,130 +227,50 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Email with Verify button */}
+            {/* Email */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-600">Email Address *</label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <FiMail size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${errors.email ? "text-red-400" : emailVerified ? "text-green-500" : "text-slate-400"}`} />
-                  <input
-                    className={`form-input pl-9 text-sm pr-9 ${
-                      errors.email ? "border-red-500 focus:ring-red-400"
-                      : emailVerified ? "border-green-400 bg-green-50 focus:ring-green-200"
-                      : ""
-                    }`}
-                    placeholder="john@example.com"
-                    type="email"
-                    value={email}
-                    disabled={emailVerified}
-                    onChange={(e) => handleEmailChange(e.target.value)}
-                  />
-                  {emailVerified && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">
-                      <FiCheck size={12} />
-                    </div>
-                  )}
-                </div>
-
-                {!emailVerified && (
-                  <button
-                    type="button"
-                    disabled={sendingOtp || cooldown > 0}
-                    onClick={otpSent ? undefined : handleSendOtp}
-                    className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition disabled:opacity-50 disabled:cursor-not-allowed
-                      ${otpSent
-                        ? "bg-slate-100 text-slate-500 cursor-default"
-                        : "bg-indigo-600 text-white hover:bg-indigo-700"}`}
-                  >
-                    {sendingOtp ? (
-                      <span className="flex items-center gap-1">
-                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Sending…
-                      </span>
-                    ) : otpSent ? "Sent ✓" : "Verify"}
-                  </button>
-                )}
-
-                {emailVerified && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmailVerified(false);
-                      setOtpSent(false);
-                      setOtpValue("");
-                      setOtpError("");
-                    }}
-                    className="shrink-0 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 hover:border-red-300 hover:text-red-500 transition"
-                    title="Change email"
-                  >
-                    Change
-                  </button>
-                )}
+              <div className="relative">
+                <FiMail size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${errors.email ? "text-red-400" : "text-slate-400"}`} />
+                <input
+                  className={`form-input pl-9 text-sm ${errors.email ? "border-red-500 focus:ring-red-400" : ""}`}
+                  placeholder="you@example.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
+                />
               </div>
               {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
-              {!otpSent && !emailVerified && otpError && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-red-600 font-semibold">
-                  <FiAlertCircle size={12} /> {otpError}
-                </p>
-              )}
-              {emailVerified && (
-                <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-green-600">
-                  <FiCheck size={12} /> Email verified
-                </p>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-600">Password *</label>
+              <div className="relative">
+                <FiLock size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${errors.password ? "text-red-400" : "text-slate-400"}`} />
+                <input
+                  className={`form-input pl-9 pr-10 text-sm ${errors.password ? "border-red-500 focus:ring-red-400" : ""}`}
+                  placeholder="Create a password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); clearError("password"); }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+              {!errors.password && password && password.length < 8 && (
+                <p className="mt-1 text-xs text-amber-500">Minimum 8 characters required ({password.length}/8)</p>
               )}
             </div>
 
-            {/* Inline OTP input */}
-            {otpSent && !emailVerified && (
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Enter 6-digit code sent to <span className="text-indigo-600">{email}</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="Enter OTP"
-                    disabled={verifyingOtp}
-                    value={otpValue}
-                    onChange={(e) => { setOtpValue(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(""); }}
-                    className={`form-input flex-1 text-sm tracking-[0.3em] font-bold text-center ${otpError ? "border-red-400 focus:ring-red-300" : "border-indigo-300 focus:ring-indigo-200"}`}
-                  />
-                  <button
-                    type="button"
-                    disabled={verifyingOtp || otpValue.length !== 6}
-                    onClick={handleVerifyOtp}
-                    className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    {verifyingOtp ? (
-                      <span className="flex items-center gap-1">
-                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Verifying…
-                      </span>
-                    ) : "Confirm"}
-                  </button>
-                </div>
-                {otpError && (
-                  <p className="mt-1 flex items-center gap-1 text-xs text-red-600 font-semibold">
-                    <FiAlertCircle size={12} /> {otpError}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-slate-400">
-                  Code expires in 10 minutes. &nbsp;
-                  {cooldown > 0 ? (
-                    <span className="font-semibold text-slate-500">Resend in {cooldown}s</span>
-                  ) : (
-                    <button type="button" onClick={handleSendOtp} className="font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1">
-                      <FiRefreshCw size={11} /> Resend
-                    </button>
-                  )}
-                </p>
-              </div>
-            )}
-
-
-            {/* Organizer extras */}
+            {/* Organizer extras / Attendee interests */}
             {role === "organizer" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -465,11 +312,11 @@ export default function Register() {
                         onClick={() => toggleInterest(interest)}
                         className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                           isSelected
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300"
+                            ? "border-indigo-600 bg-indigo-600 text-white"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
                         }`}
                       >
-                        {isSelected ? "✓ " : ""}{interest}
+                        {interest}
                       </button>
                     );
                   })}
@@ -482,35 +329,41 @@ export default function Register() {
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
+                  id="terms"
                   checked={agreed}
                   onChange={(e) => { setAgreed(e.target.checked); clearError("agreed"); }}
-                  className={`mt-1 h-4 w-4 rounded focus:ring-indigo-500 ${errors.agreed ? "border-red-500 accent-red-500" : "border-slate-300 text-indigo-600"}`}
+                  className={`mt-0.5 h-4 w-4 rounded ${errors.agreed ? "accent-red-500" : "accent-indigo-600"}`}
                 />
-                <span className="text-xs text-slate-500 leading-tight">
+                <label htmlFor="terms" className="cursor-pointer text-xs leading-tight text-slate-500">
                   I agree to the{" "}
-                  <Link to="/" className="text-indigo-600 font-semibold hover:underline">Terms &amp; Conditions</Link>
+                  <Link to="/terms" className="font-semibold text-indigo-600 hover:underline">Terms &amp; Conditions</Link>
                   {" "}and{" "}
-                  <Link to="/" className="text-indigo-600 font-semibold hover:underline">Privacy Policy</Link>.
-                </span>
+                  <Link to="/privacy" className="font-semibold text-indigo-600 hover:underline">Privacy Policy</Link>.
+                </label>
               </div>
               {errors.agreed && <p className="mt-1 text-xs text-red-500">{errors.agreed}</p>}
             </div>
 
             {/* Submit */}
-            <Button
+            <button
               type="submit"
-              variant="primary"
-              className={`w-full text-base py-3.5 transition ${!canSubmit ? "opacity-50 cursor-not-allowed" : ""}`}
               disabled={!canSubmit}
+              className={`w-full rounded-xl py-3.5 text-base font-bold text-white transition
+                bg-gradient-to-r from-[#6C5CE7] to-[#4f46e5]
+                hover:from-[#5a4bd1] hover:to-[#4338ca]
+                disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {submitting ? "Registering..." : "Register & Continue"}
-            </Button>
+              {submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Registering…
+                </span>
+              ) : "Register & Continue"}
+            </button>
 
-            {/* Status tip */}
             {!canSubmit && !submitting && (
               <p className="text-center text-xs text-slate-400">
-                {!emailVerified ? "Verify your email to continue" :
-                 !agreed ? "Accept the Terms to continue" : ""}
+                {!agreed ? "Accept the Terms to continue" : "Fill in all required fields to continue"}
               </p>
             )}
           </form>
