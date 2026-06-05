@@ -188,23 +188,6 @@ export default function Login() {
 
           <div className="my-6 flex items-center gap-4 text-sm text-slate-500">
             <div className="h-px flex-1 bg-slate-200" />
-            Or continue with
-            <div className="h-px flex-1 bg-slate-200" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold hover:border-indigo-300 transition flex items-center justify-center col-span-2 md:col-span-4"
-            >
-              <FaGoogle className="mr-2 text-red-500" />
-              Login with Google
-            </button>
-          </div>
-
-          <div className="my-6 flex items-center gap-4 text-sm text-slate-500">
-            <div className="h-px flex-1 bg-slate-200" />
             or login with email
             <div className="h-px flex-1 bg-slate-200" />
           </div>
