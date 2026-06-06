@@ -166,22 +166,6 @@ export default function Register() {
             <p className="mt-1 text-sm text-slate-500">Enter your details to create a free account</p>
           </div>
 
-          {/* Google sign up */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="mb-5 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50"
-          >
-            <FaGoogle className="text-red-500" />
-            Sign up with Google
-          </button>
-
-          <div className="mb-5 flex items-center gap-3 text-xs text-slate-400">
-            <div className="h-px flex-1 bg-slate-200" />
-            or sign up with email
-            <div className="h-px flex-1 bg-slate-200" />
-          </div>
-
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {error && (
               <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
